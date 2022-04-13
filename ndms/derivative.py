@@ -1,8 +1,6 @@
 import numpy as np
-import numba as nb
 
 
-@nb.njit(nb.float32[:, :](nb.float32[:, :]), nogil=True)
 def velocity(seq):
     """
     :param [n_frames x dim]

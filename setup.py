@@ -6,6 +6,6 @@ setup(
     packages=[
         "ndms",
     ],
-    setup_requires=["numpy", "numba"],
-    install_requires=["numpy", "numba", "annoy"],
+    setup_requires=["numpy"],
+    install_requires=["numpy", "annoy"],
 )
