@@ -1,5 +1,4 @@
 import numpy as np
-import numba as nb
 import math as m
 from os.path import join, isfile
 from annoy import AnnoyIndex
