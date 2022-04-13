@@ -28,12 +28,10 @@ class Database:
         self,
         data: Data,
         kernel_size: int,
-        keep_original_seq=False,
         transform_data_fn=None,
     ):
         self.kernel_size = kernel_size
         self.transform_data_fn = transform_data_fn
-        self.keep_original_seq = keep_original_seq
 
         self.Meta = []
         self.Seqs = []
