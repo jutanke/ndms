@@ -25,6 +25,19 @@ class Data(ABC):
 
 
 class Database:
+    @staticmethod
+    def load_from_cache(cache_fname: str, kernel_size: int, transform_data_fn=None):
+        """
+        :param cache_fname:
+        """
+        assert isfile(cache_fname)
+        return Database(
+            data=None,
+            kernel_size=kernel_size,
+            transform_data_fn=transform_data_fn,
+            cache_fname=cache_fname,
+        )
+
     def __init__(
         self,
         data: Data,
