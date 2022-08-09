@@ -6,6 +6,7 @@ import numpy.linalg as la
 
 from abc import ABC, abstractmethod
 
+
 from ndms.ndms import ndms
 
 
@@ -34,7 +35,6 @@ class Database:
     ):
         if cache_fname is not None and not cache_fname.endswith(".npz"):
             cache_fname = cache_fname + ".npz"
-            cache_fname = f"ks{kernel_size}_" + cache_fname
 
         self.kernel_size = kernel_size
         self.transform_data_fn = transform_data_fn
@@ -84,11 +84,10 @@ class Database:
         """
         :param subseq: {n_dim}
         """
-        i, dist = self.lookup.get_nns_by_vector(
-            vector=subseq, n=1, include_distances=True
-        )
+        i = self.lookup.get_nns_by_vector(vector=subseq, n=1, include_distances=False)
+
         i = i[0]
-        dist = dist[0]
+        # dist = dist[0]
         true_seq = self.Seqs[i]
         kernel_size = self.kernel_size
         true_seq = np.reshape(true_seq, (kernel_size, -1))

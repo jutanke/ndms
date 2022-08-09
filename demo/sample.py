@@ -1,6 +1,8 @@
 import sys
 
 sys.path.insert(0, "./../")
+sys.path.insert(0, "./../ndms")
+sys.path.insert(0, "./")
 
 import numpy as np
 from ndms.database import Data, Database

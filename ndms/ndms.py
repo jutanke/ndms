@@ -1,9 +1,11 @@
 import numpy as np
+import numba as nb
 import numpy.linalg as la
 import math as m
 from ndms.derivative import velocity
 
 
+@nb.njit(nb.float32(nb.float32[:, :], nb.float32[:, :], nb.int64), nogil=True)
 def ndms(true_seq, query_seq, kernel_size):
     """
     :param true_seq: [kernel_size x n_useful_joints*3]

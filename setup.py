@@ -2,10 +2,10 @@ from distutils.core import setup
 
 setup(
     name="ndms",
-    version="0.0.3",
+    version="0.0.4",
     packages=[
         "ndms",
     ],
-    setup_requires=["numpy"],
-    install_requires=["numpy", "annoy"],
+    setup_requires=["numpy", "numba"],
+    install_requires=["numpy", "numba", "annoy"],
 )
