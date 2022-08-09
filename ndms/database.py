@@ -30,9 +30,11 @@ class Database:
         kernel_size: int,
         transform_data_fn=None,
         cache_fname: str = None,
+        keep_orig_seq: bool = False,
     ):
         if cache_fname is not None and not cache_fname.endswith(".npz"):
             cache_fname = cache_fname + ".npz"
+            cache_fname = f"ks{kernel_size}_" + cache_fname
 
         self.kernel_size = kernel_size
         self.transform_data_fn = transform_data_fn
@@ -41,7 +43,8 @@ class Database:
             obj = np.load(cache_fname)
             self.Meta = obj["Meta"]
             self.Seqs = obj["Seqs"]
-            self.Orig_Seqs = obj["Orig_Seqs"]
+            if keep_orig_seq:
+                self.Orig_Seqs = obj["Orig_Seqs"]
         else:
             self.Meta = []
             self.Seqs = []
