@@ -45,7 +45,7 @@ class SampleData(Data):
         self.data = [seq1, seq2, seq3]
 
     def n_dim(self):
-        return 3 * 2
+        return 3
 
     def __getitem__(self, index: int):
         return self.data[index]

@@ -25,8 +25,8 @@ class Data(ABC):
     @abstractmethod
     def n_dim(self):
         """
-        return the final data dimension AFTER
-        potential transformations!
+        return the final data dimension per frame
+        AFTER potential transformations!
         """
         raise NotImplementedError()
 
@@ -77,7 +77,7 @@ class Database:
 
         self.kernel_size = kernel_size
         self.transform_data_fn = transform_data_fn
-        n_dim = data.n_dim()
+        n_dim = data.n_dim() * kernel_size
         self.lookup = AnnoyIndex(n_dim, "euclidean")
         if cache_fname is not None and isfile(cache_fname):
             self.lookup.load(cache_fname)
