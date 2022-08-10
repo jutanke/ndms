@@ -45,6 +45,7 @@ class Database:
         transform_data_fn=None,
         cache_fname: str = None,
         keep_orig_seq: bool = False,
+        build_index_at_ctor: bool = True,
     ):
         if cache_fname is not None and not cache_fname.endswith(".npz"):
             cache_fname = cache_fname + ".npz"
@@ -84,6 +85,10 @@ class Database:
                     Orig_Seqs=self.Orig_Seqs,
                 )
 
+        if build_index_at_ctor:
+            self._build_index()
+
+    def _build_index(self):
         n_dim = len(self.Seqs[0])
         self.lookup = AnnoyIndex(n_dim, "euclidean")
         for i, v in enumerate(self.Seqs):
