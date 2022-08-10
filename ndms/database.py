@@ -11,6 +11,9 @@ from ndms.ndms import ndms
 
 
 class Data(ABC):
+    def __init__(self):
+        self.meta_lookup = None  # db-index -> (seqid, frame)
+
     @abstractmethod
     def __getitem__(self, index: int):
         """
@@ -20,8 +23,32 @@ class Data(ABC):
         raise NotImplementedError()
 
     @abstractmethod
+    def n_dim(self):
+        """
+        return the final data dimension AFTER
+        potential transformations!
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
     def __len__(self):
         raise NotImplementedError()
+
+    def meta(self, kernel_size, db_index):
+        """
+        return index into sequences and frame
+        """
+        if self.meta_lookup is None:
+            # build lookup
+            self.meta_lookup = {}
+            i = 0
+            for seqid in range(len(self)):
+                seq = self[seqid]
+                n_frames = len(seq)
+                for frame in range((n_frames - kernel_size) + 1):
+                    self.meta_lookup[i] = (seqid, frame)
+                    i += 1
+        return self.meta_lookup[db_index]
 
 
 class Database:
@@ -44,63 +71,39 @@ class Database:
         kernel_size: int,
         transform_data_fn=None,
         cache_fname: str = None,
-        keep_orig_seq: bool = False,
     ):
-        if cache_fname is not None and not cache_fname.endswith(".npz"):
-            cache_fname = cache_fname + ".npz"
-
-        cache_fname_ann = (
-            None if cache_fname is None else cache_fname.replace(".npz", ".ann")
-        )
+        if cache_fname is not None and not cache_fname.endswith(".ann"):
+            cache_fname = cache_fname + ".ann"
 
         self.kernel_size = kernel_size
         self.transform_data_fn = transform_data_fn
-
+        n_dim = data.n_dim()
+        self.lookup = AnnoyIndex(n_dim, "euclidean")
         if cache_fname is not None and isfile(cache_fname):
-            obj = np.load(cache_fname, mmap_mode="r")
-            self.Meta = obj["Meta"]
-            self.Seqs = obj["Seqs"]
-            if keep_orig_seq:
-                self.Orig_Seqs = obj["Orig_Seqs"]
+            self.lookup.load(cache_fname)
         else:
-            self.Meta = []
-            self.Seqs = []
-            self.Orig_Seqs = []
+            i = 0
             for seqid in range(len(data)):
                 seq = data[seqid]
+                n_frames = len(seq)
+                if len(seq.shape) > 2:
+                    seq = seq.reshape((n_frames, -1))
 
                 total_dim = seq.shape[1]
                 assert int(m.ceil(total_dim / 3)) == int(m.floor(total_dim / 3))
-
-                for frame in range((len(seq) - kernel_size) + 1):
-                    sub_seq = seq[frame : frame + kernel_size].copy().astype("float32")
-                    self.Orig_Seqs.append(sub_seq)
+                for frame in range((n_frames - kernel_size) + 1):
+                    sub_seq = seq[frame : frame + kernel_size].copy()
                     if transform_data_fn is not None:
                         sub_seq = transform_data_fn(sub_seq)
-                    self.Seqs.append(sub_seq.flatten())
-                    self.Meta.append((seqid, frame))
+                    self.lookup.add_item(i, sub_seq.flatten())
+                    i += 1
 
-            if cache_fname is not None:
-                np.savez(
-                    cache_fname,
-                    Seqs=self.Seqs,
-                    Meta=self.Meta,
-                    Orig_Seqs=self.Orig_Seqs,
-                )
-
-        n_dim = len(self.Seqs[0])
-        self.lookup = AnnoyIndex(n_dim, "euclidean")
-        if isfile(cache_fname_ann):
-            self.lookup.load(cache_fname_ann)
-        else:
-            for i, v in enumerate(self.Seqs):
-                self.lookup.add_item(i, v)
             self.lookup.build(10)
-            if cache_fname_ann is not None:
-                self.lookup.save(cache_fname_ann)
+            if cache_fname is not None:
+                self.lookup.save(cache_fname)
 
     def __len__(self):
-        return len(self.Seqs)
+        return self.lookup.get_n_items()
 
     def query(self, subseq):
         """
@@ -109,8 +112,8 @@ class Database:
         i = self.lookup.get_nns_by_vector(vector=subseq, n=1, include_distances=False)
 
         i = i[0]
-        # dist = dist[0]
-        true_seq = self.Seqs[i]
+        true_seq = self.lookup.get_item_vector(i)
+
         kernel_size = self.kernel_size
         true_seq = np.reshape(true_seq, (kernel_size, -1))
         query_seq = np.reshape(subseq, (kernel_size, -1))
@@ -126,7 +129,7 @@ class Database:
         distances = []
         identities = []
         for frame in range((len(subseq) - kernel_size) + 1):
-            sub_seq = subseq[frame : frame + kernel_size].copy().astype("float32")
+            sub_seq = subseq[frame : frame + kernel_size].copy()
             if self.transform_data_fn is not None:
                 sub_seq = self.transform_data_fn(sub_seq)
             sub_seq = sub_seq.flatten()

@@ -5,7 +5,7 @@ import math as m
 from ndms.derivative import velocity
 
 
-@nb.njit(nb.float32(nb.float32[:, :], nb.float32[:, :], nb.int64), nogil=True)
+@nb.njit(nb.float64(nb.float64[:, :], nb.float64[:, :], nb.int64), nogil=True)
 def ndms(true_seq, query_seq, kernel_size):
     """
     :param true_seq: [kernel_size x n_useful_joints*3]

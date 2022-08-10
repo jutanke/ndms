@@ -10,6 +10,7 @@ from ndms.database import Data, Database
 
 class SampleData(Data):
     def __init__(self):
+        super().__init__()
         # sample sequences with dim=3 but varying lengths
         seq1 = np.array(
             [
@@ -43,6 +44,9 @@ class SampleData(Data):
         )
         self.data = [seq1, seq2, seq3]
 
+    def n_dim(self):
+        return 3 * 2
+
     def __getitem__(self, index: int):
         return self.data[index]
 
@@ -63,3 +67,5 @@ d, i = db.rolling_query(seq)
 
 print("d", d)
 print("i", i)
+
+print(data.meta(kernel_size=2, db_index=i[0]))
