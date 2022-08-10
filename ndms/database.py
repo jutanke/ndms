@@ -45,16 +45,19 @@ class Database:
         transform_data_fn=None,
         cache_fname: str = None,
         keep_orig_seq: bool = False,
-        build_index_at_ctor: bool = True,
     ):
         if cache_fname is not None and not cache_fname.endswith(".npz"):
             cache_fname = cache_fname + ".npz"
+
+        cache_fname_ann = (
+            None if cache_fname is None else cache_fname.replace(".npz", ".ann")
+        )
 
         self.kernel_size = kernel_size
         self.transform_data_fn = transform_data_fn
 
         if cache_fname is not None and isfile(cache_fname):
-            obj = np.load(cache_fname)
+            obj = np.load(cache_fname, mmap_mode="r")
             self.Meta = obj["Meta"]
             self.Seqs = obj["Seqs"]
             if keep_orig_seq:
@@ -85,15 +88,16 @@ class Database:
                     Orig_Seqs=self.Orig_Seqs,
                 )
 
-        if build_index_at_ctor:
-            self._build_index()
-
-    def _build_index(self):
         n_dim = len(self.Seqs[0])
         self.lookup = AnnoyIndex(n_dim, "euclidean")
-        for i, v in enumerate(self.Seqs):
-            self.lookup.add_item(i, v)
-        self.lookup.build(10)
+        if isfile(cache_fname_ann):
+            self.lookup.load(cache_fname_ann)
+        else:
+            for i, v in enumerate(self.Seqs):
+                self.lookup.add_item(i, v)
+            self.lookup.build(10)
+            if cache_fname_ann is not None:
+                self.lookup.save(cache_fname_ann)
 
     def __len__(self):
         return len(self.Seqs)
