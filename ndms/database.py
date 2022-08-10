@@ -53,13 +53,15 @@ class Data(ABC):
 
 class Database:
     @staticmethod
-    def load_from_cache(cache_fname: str, kernel_size: int, transform_data_fn=None):
+    def load_from_cache(
+        cache_fname: str, kernel_size: int, dummy_dataset_fn, transform_data_fn=None
+    ):
         """
         :param cache_fname:
         """
         assert isfile(cache_fname)
         return Database(
-            data=None,
+            data=dummy_dataset_fn(),
             kernel_size=kernel_size,
             transform_data_fn=transform_data_fn,
             cache_fname=cache_fname,
