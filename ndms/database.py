@@ -82,7 +82,7 @@ class Database:
         n_dim = data.n_dim() * kernel_size
         self.lookup = AnnoyIndex(n_dim, "euclidean")
         if cache_fname is not None and isfile(cache_fname):
-            self.lookup.load(cache_fname)
+            self.lookup.load(cache_fname, prefault=False)
         else:
             i = 0
             for seqid in range(len(data)):
@@ -112,8 +112,8 @@ class Database:
         :param subseq: {n_dim}
         """
         i = self.lookup.get_nns_by_vector(vector=subseq, n=1, include_distances=False)
-
         i = i[0]
+
         true_seq = self.lookup.get_item_vector(i)
 
         kernel_size = self.kernel_size
